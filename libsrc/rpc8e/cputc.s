@@ -16,7 +16,7 @@ initconio:
         lda     #>OUTST           ; 
         sta     WINOUT+1          ; Set the high byte of the pointer
         rts
-		
+        
         .code
 
 ; Plot a character - also used as internal function
@@ -34,10 +34,10 @@ _cputc:
 
 cputdirect:
         jsr     put
-		inc     WINOUT
+        inc     WINOUT
         inc     CH              ; Bump to next column
         lda     CH
-		clc
+        clc
         cmp     #80
         bcc     :+
         jsr     newline
@@ -49,34 +49,18 @@ left:   lda     #$00            ; Goto left edge of screen
 
 newline:
         inc     CV              ; Bump to next line
-		lda     CV
+        lda     CV
         sta     BUFROW
-		clc
-		cmp     #50              ; Screen is 50 columns tall
+        clc
+        cmp     #50              ; Screen is 50 columns tall
         bcc     :+
         lda     #00              ; Go back to the top of the screen
         sta     CV
-		sta     BUFROW
-		sta     WINOUT
-:		rts
+        sta     BUFROW
+        sta     WINOUT
+:       rts
 
 put:    ldy     #00
-		sta     (WINOUT),Y        ; put the current character to the display
+        sta     (WINOUT),Y        ; put the current character to the display
         rts
 
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
