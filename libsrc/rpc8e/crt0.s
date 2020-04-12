@@ -44,7 +44,8 @@ _init:
 		  XCE
 		  LDX     #$FF                 ; Initialize Hardware stack pointer to $02FF (thanks to the eloram bug), the software stack is 0x100 to 0x1FF and not the same thing
           TXS                          ; In fact putting the same place causes the program not to work.
-          CLD                          ; Clear decimal mode		  
+          CLD                          ; Clear decimal mode
+		  CLC
 		  
 ; ---------------------------------------------------------------------------
 ; Set cc65 argument stack pointer

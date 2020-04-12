@@ -1,112 +1,82 @@
 ; void __fastcall__ cputcxy (unsigned char x, unsigned char y, char c);
 ; void __fastcall__ cputc (char c);
 ;
-		.export         _cputc
-		.import         pusha,pushax,tosaddax,incsp1,decsp1,incsp2
-		.importzp       sp,tmp5,ptr5
+        .constructor    initconio
+        .export         _cputcxy, _cputc
+        .export         cputdirect, newline
+        .import         gotoxy, VTABZ
 
+        .include        "rpc8e.inc"
+
+        .segment        "ONCE"
+
+initconio:
+        lda     #<OUTST           ; Get the begining of the text window
+        sta     WINOUT            ; Set the pointer to the start of the window
+        lda     #>OUTST           ; 
+        sta     WINOUT+1          ; Set the high byte of the pointer
+        rts
+		
         .code
 
-; Plot a character at the current cursor x,y - also used as internal function
-;Manually Modified from the following c code because all the regular temp variables are used when this is called (hence tmp5 and ptr5)
-;void __fastcall__ cputc(char input) {
-;    *((char *)0x0310+UINT8_CHARX) = input;
-;    UINT8_CHARX++;
-;    if (UINT8_CHARX >= 80) {
-;        UINT8_CHARY++;
-;        UINT8_MEMORYROW++;
-;        UINT8_CHARX = 0;
-;    }
-;    return;
-;}
+; Plot a character - also used as internal function
 
+_cputcxy:
+        pha                     ; Save C
+        ;jsr     gotoxy          ; Call this one, will pop params
+        pla                     ; Restore C and run into _cputc
 
+_cputc:
+        cmp     #$0D            ; Test for \r = carrage return
+        beq     left
+        cmp     #$0A            ; Test for \n = line feed
+        beq     newline
 
-.proc _cputc
-        jsr     pusha
+cputdirect:
+        jsr     put
+		inc     WINOUT
+        inc     CH              ; Bump to next column
+        lda     CH
+		clc
+        cmp     #80
+        bcc     :+
+        jsr     newline
+left:   lda     #$00            ; Goto left edge of screen
+        sta     CH
+        lda     #<OUTST           ; Get the begining of the text window
+        sta     WINOUT            ; Set the pointer to the start of the window
+:       rts
+
+newline:
+        inc     CV              ; Bump to next line
+		lda     CV
+        sta     BUFROW
+		clc
+		cmp     #50              ; Screen is 50 columns tall
+        bcc     :+
+        lda     #00              ; Go back to the top of the screen
+        sta     CV
+		sta     BUFROW
+		sta     WINOUT
+:		rts
+
+put:    ldy     #00
+		sta     (WINOUT),Y        ; put the current character to the display
+        rts
+
 		
-        ldx     #$00
-        lda     $0301
-        jsr     pushax
-        ldx     #$03
-        lda     #$10
-        jsr     tosaddaxTMP5
-        jsr     pushax
-        ldy     #$02
-        ldx     #$00
-        lda     (sp),y
-        ldy     #$00
-        jsr     staspidxTMP5
-        ldx     #$00
-        lda     $0301
-        inc     $0301
 		
-        ldx     #$00
-        lda     $0301
-        cmp     #$50
-        lda     #$00
-        ldx     #$00
-        rol     a
-        beq     L0008
 		
-        ldx     #$00
-        lda     $0302
-        inc     $0302
-	    ldx     #$00
-        lda     $0300
-        inc     $0300
-        ldx     #$00
-        lda     #$00
-        sta     $0301
 		
-        ldx     #$00
-        lda     $0301
-        cmp     #$50
-        lda     #$00
-        ldx     #$00
-        rol     a
-        beq     L0008
-        ldx     #$00
-        lda     $0302
-        inc     $0302		
 		
-L0008:  jsr     incsp1
-		rts
-.endproc
-
-.proc   staspidxTMP5
-
-        pha
-        sty     tmp5            ; Save Index
-        ldy     #1
-        lda     (sp),y
-        sta     ptr5+1
-        dey
-        lda     (sp),y
-        sta     ptr5            ; Pointer now in ptr1
-        ldy     tmp5            ; Restore offset
-        pla                     ; Restore value
-        sta     (ptr5),y        ; Store
-        jmp     incsp2          ; Drop address
-
-.endproc
-
-.proc tosaddaxTMP5
-        clc                     ; (2)
-        ldy     #0              ; (4)
-        adc     (sp),y          ; (9) lo byte
-        iny                     ; (11)
-        sta     tmp5            ; (14) save it
-        txa                     ; (16) 
-        adc     (sp),y          ; (21) hi byte
-        tax                     ; (23)
-        clc                     ; (25)
-        lda     sp              ; (28)
-        adc     #2              ; (30)
-        sta     sp              ; (33)
-        bcc     L1              ; (36)
-        inc     sp+1            ; (-1+5)
-L1:     lda     tmp5            ; (39) restore low byte
-        rts                     ; (6502: 45 cycles, 26 bytes <-> 65SC02: 42 cycles, 22 bytes )
 		
-.endproc
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
