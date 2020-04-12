@@ -3,8 +3,8 @@
 ;
         .constructor    initconio
         .export         _cputcxy, _cputc
-        .export         cputdirect, newline
-        .import         gotoxy, VTABZ
+        .export         cputdirect, newline, put
+        .import         gotoxy
 
         .include        "rpc8e.inc"
 
@@ -23,7 +23,7 @@ initconio:
 
 _cputcxy:
         pha                     ; Save C
-        ;jsr     gotoxy          ; Call this one, will pop params
+        jsr     gotoxy          ; Call this one, will pop params
         pla                     ; Restore C and run into _cputc
 
 _cputc:
@@ -41,10 +41,10 @@ cputdirect:
         cmp     #80
         bcc     :+
         jsr     newline
-left:   lda     #$00            ; Goto left edge of screen
+left:   lda     #0               ; Goto left edge of screen
         sta     CH
-        lda     #<OUTST           ; Get the begining of the text window
-        sta     WINOUT            ; Set the pointer to the start of the window
+        lda     #<OUTST         ; Get the begining of the text window
+        sta     WINOUT          ; Set the pointer to the start of the window
 :       rts
 
 newline:
@@ -54,13 +54,13 @@ newline:
         clc
         cmp     #50              ; Screen is 50 columns tall
         bcc     :+
-        lda     #00              ; Go back to the top of the screen
+        lda     #0               ; Go back to the top of the screen
         sta     CV
         sta     BUFROW
         sta     WINOUT
 :       rts
 
-put:    ldy     #00
-        sta     (WINOUT),Y        ; put the current character to the display
+put:    ldy     #0
+        sta     (WINOUT),Y      ; put the current character to the display
         rts
 
